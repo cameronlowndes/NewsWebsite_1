@@ -6,6 +6,7 @@ import {
   getNewsForYearAndMonth,
 } from "@/lib/news";
 import Link from "next/link";
+import { notFound } from "next/navigation"; // Only for App Router
 
 export default function FilteredNewsPage({ params }) {
   const filter = params.filter || [];
@@ -13,20 +14,26 @@ export default function FilteredNewsPage({ params }) {
   const selectedYear = filter[0];
   const selectedMonth = filter[1];
 
+  const allYears = getAvailableNewsYears();
+  const yearIsValid = selectedYear ? allYears.includes(selectedYear) : true;
+  const allMonths = selectedYear ? getAvailableNewsMonths(selectedYear) : [];
+  const monthIsValid = selectedMonth ? allMonths.includes(selectedMonth) : true;
+
+  // Throw 404 if invalid
+  if (!yearIsValid || !monthIsValid) {
+   throw  new Error('Invalid filter')
+  }
+
   let news = [];
   let months = [];
-  let years = [];
+  let years = allYears;
 
   if (selectedYear && selectedMonth) {
     news = getNewsForYearAndMonth(selectedYear, selectedMonth);
-    months = getAvailableNewsMonths(selectedYear);
-    years = getAvailableNewsYears();
+    months = allMonths;
   } else if (selectedYear) {
     news = getNewsForYear(selectedYear);
-    months = getAvailableNewsMonths(selectedYear);
-    years = getAvailableNewsYears();
-  } else {
-    years = getAvailableNewsYears();
+    months = allMonths;
   }
 
   return (
@@ -87,7 +94,6 @@ export default function FilteredNewsPage({ params }) {
       </header>
 
       <main>
-        {/* Show "No news found" ONLY if filter applied and news is empty */}
         {(selectedYear || selectedMonth) && news.length === 0 ? (
           <p>No news found for the selected period.</p>
         ) : (
