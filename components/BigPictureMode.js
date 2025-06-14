@@ -1,17 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 export default function BigPictureMode({ imageSrc, alt }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  function openOverlay() {
-    setIsOpen(true);
-  }
-
-  function closeOverlay() {
+  const closeOverlay = useCallback(() => {
     setIsOpen(false);
-  }
+  }, []);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === "Escape") {
+      closeOverlay();
+    }
+  }, [closeOverlay]);
+
+  useEffect(() => {
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, handleKeyDown]);
 
   return (
     <>
@@ -19,7 +31,7 @@ export default function BigPictureMode({ imageSrc, alt }) {
         src={imageSrc}
         alt={alt}
         className="big-picture-thumbnail"
-        onClick={openOverlay}
+        onClick={() => setIsOpen(true)}
       />
 
       {isOpen && (
@@ -46,11 +58,9 @@ export default function BigPictureMode({ imageSrc, alt }) {
           position: fixed;
           inset: 0;
           background-color: rgba(0, 0, 0, 0.95);
-
           display: flex;
           justify-content: center;
           align-items: center;
-
           z-index: 1000;
           cursor: pointer;
         }
